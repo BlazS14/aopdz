@@ -150,22 +150,40 @@ def flood(sortedgray):
                     pp = fifo[0]
                     fifo = fifo[1:]
                     for ppp in get_ng(pp[1],pp[2],arr):
-                        if ppp[0] == mask:
+                        if arr[ppp[1],ppp[2]] == mask:
                             arr[ppp[1],ppp[2]] = current_label
                             fifo = np.append(fifo, [[arr[ppp[1],ppp[2]],ppp[1],ppp[2]]],axis=0)
     print(arr)
     return arr
+
+
+
+#function that shows an image and lets the user drwa a rectangle on it and returns the coordinates of the rectangle
+def get_rectangle_coordinates(image):
+    global height
+    global width
+    clone = image.copy()
+    r = cv2.selectROI("win1", clone, fromCenter=False, showCrosshair=True)
+    cv2.destroyAllWindows()
+    return r
+
+
+
+
+
 #get the image from file selection dialog
 image = cv2.imread(filedialog.askopenfilename())
 
+r = get_rectangle_coordinates(image)
+
 #image = cv2.imread("C:\\Users\\GTAbl\\Desktop\\AOPDZ-Vaja3\\untitled.jpg")
 
-#image = cv2.resize(image, (960, 540))
+image = cv2.resize(image, (960, 540))
 
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 height, width = gray.shape
 
-gray[gray < 110] = 0
+gray[gray < 100] = 0
 
 #gray[gray > 200] = 0
 
