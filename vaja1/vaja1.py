@@ -8,12 +8,15 @@ def jp2_to_nparray(filename):
     img = Image.open(filename)
     img.load()
     data = np.asarray(img, dtype="int32")
-    data = data+1
+    data = data
     return data
 
 
 def nparray_to_tiff(data, filename):
-    img = Image.fromarray(data.astype('uint8'))
+    #data = data / 255
+    #data = data/np.max(data)
+    #data = data * 255
+    img = Image.fromarray(data)
     img.save(filename)
     
     
@@ -49,7 +52,10 @@ def resize_images(data):
         img = img.resize((max_x,max_y),Image.Resampling.LANCZOS)
         data[i] = np.asarray(img, dtype="int32")
     return data    
-    
+
+
+
+
 #show the user a folder selection dialog and parse all .jp2 files in the folder using jp2_to_nparray
 def folder_to_nparray():
     root = tk.Tk()
@@ -66,41 +72,56 @@ def folder_to_nparray():
 
     return data
 
-#compute the NDVI index from the data and save it as a tiff image
-def compute_ndvi(data):
-    ndvi = (data[9]-data[5])/(data[9]+data[5])
-    nparray_to_tiff(ndvi,"ndvi.tiff")
-    
 #compute the EVI index from the data and save it as a tiff image
 def compute_evi(data):
-    evi = (data[9]-data[5])/(data[9]+6*data[5]-7.5*data[3]+1)
+    evi = (data[7]-data[3])/(data[7]+6*data[3]-7.5*data[1]+1)
     nparray_to_tiff(evi,"evi.tiff")
+
+#compute the NDVI index from the data and save it as a tiff image
+def compute_ndvi(data):
+    ndvi = (data[7]-data[3])/(data[7]+data[3])
+    nparray_to_tiff(ndvi,"ndvi.tiff")
 
 #compute the GNDVI index from the data and save it as a tiff image
 def compute_gndvi(data):
-    gndvi = (data[9]-data[4])/(data[9]+data[4])
+    gndvi = (data[7]-data[2])/(data[7]+data[2])
     nparray_to_tiff(gndvi,"gndvi.tiff")
+    
+#compute the MSI index from the data and save it as a tiff image
+def compute_msi(data):
+    msi = data[11]/data[7]
+    nparray_to_tiff(msi,"msi.tiff")
     
 #compute the NDWI index from the data and save it as a tiff image
 def compute_ndwi(data):
-    ndwi = (data[4]-data[12])/(data[4]+data[12])
+    ndwi = (data[2]-data[11])/(data[2]+data[11])
     nparray_to_tiff(ndwi,"ndwi.tiff")
 
 #compute the NDBI index from the data and save it as a tiff image
 def compute_ndbi(data):
-    ndbi = (data[12]-data[9])/(data[12]+data[9])
+    ndbi = (data[10]-data[7])/(data[10]+data[7])
     nparray_to_tiff(ndbi,"ndbi.tiff")
     
 #compute the NDMI index from the data and save it as a tiff image
 def compute_ndmi(data):
-    ndmi = (data[10]-data[9])/(data[10]+data[9])
+    ndmi = (data[8]-data[7])/(data[8]+data[7])
     nparray_to_tiff(ndmi,"ndmi.tiff")
-    
-#compute the MSI index from the data and save it as a tiff image
-def compute_msi(data):
-    msi = data[12]/data[8]
-    nparray_to_tiff(msi,"msi.tiff")
 
+def compute_savi(data,L):
+    ndvi = (data[7]-data[3])/(data[7]+data[3]+L)*(1+L)
+    nparray_to_tiff(ndvi,"savi.tiff")
+
+def compute_nbr(data):
+    ndvi = (data[7]-data[11])/(data[7]+data[11])
+    nparray_to_tiff(ndvi,"nbr.tiff")
+
+def compute_uai(data):
+    ndvi = (data[11]-data[7])/(data[11]+data[7])
+    nparray_to_tiff(ndvi,"uai.tiff")
+
+def compute_bsi(data):
+    ndvi = (data[12]-data[7])/(data[12]+data[7])
+    nparray_to_tiff(ndvi,"bsi.tiff")
 
 data = folder_to_nparray()
 
@@ -113,3 +134,8 @@ compute_ndbi(data)
 compute_ndmi(data)
 compute_ndvi(data)
 compute_ndwi(data)
+
+compute_savi(data,2) #SAVI is a modification of NDVI that accounts for soil brightness. It introduces the parameter L to adjust for soil background reflectance.
+compute_nbr(data) #NBR is often used to assess burn severity and monitor post-fire vegetation recovery. It compares the near-infrared (NIR) and shortwave infrared (SWIR) bands.
+compute_uai(data) #UAI is used to identify urban areas by comparing the shortwave infrared (SWIR) and near-infrared (NIR) bands.
+compute_bsi(data) #BSI is used to identify areas of bare soil by comparing the shortwave infrared (SWIR1) and near-infrared (NIR) bands.
