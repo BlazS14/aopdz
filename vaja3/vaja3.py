@@ -6,6 +6,22 @@ height = None
 width = None
 
 #function that recieves a 2d array and convertes it to an image where each unique value represents a different color
+def get_color_array(arr):
+    height, width = arr.shape
+    colors = np.empty((0,3),dtype=np.uint8)
+    for i in range(arr.min(),arr.max()+2):
+        colors = np.append(colors,[[randint(0,255),randint(0,255),randint(0,255)]],axis=0)
+    colors[0] = [0,0,0]
+    return colors
+
+def color_image(arr,colors):
+    height, width = arr.shape
+    image = np.empty((height,width,3),dtype=np.uint8)
+    for i in range(height):
+        for j in range(width):
+            image[i,j] = colors[arr[i,j]]
+    return image
+
 def convert_to_color_image(arr):
     height, width = arr.shape
     colors = np.empty((0,3),dtype=np.uint8)
@@ -19,16 +35,16 @@ def convert_to_color_image(arr):
             image[i,j] = colors[arr[i,j]]
     return image
 #def a function that gets a 2d array and combines similar adjacent values into one value based on a threshold
-def combine_adjacent(arr, threshold):
+def combine_adjacent(arr, img, colors, threshold):
     height, width = arr.shape
     for x in range(height):
         for y in range(width):
             if arr[x,y] == 0:
                 continue
             else:
-                for p in get_ng_far_no_diagonal(x,y,arr):
-                    if abs(arr[x,y] - p[0]) <= threshold:
-                        arr[x,y] = p[0]
+                for p in get_ng_far_no_diagonal(x,y,img):
+                    if abs(img[x,y] - p[0]) <= threshold:
+                        colors[arr[x,y]] = colors[arr[p[1],p[2]]]
     
     return arr
 
@@ -72,7 +88,7 @@ def get_ng_far_no_diagonal(x,y, img):
             nx, ny = x + i, y + j
             nx=int(nx)
             ny=int(ny)
-            if 0 <= nx < height and 0 <= ny < width:
+            if 0 <= nx < height and 0 <= ny < width and img[nx, ny] != 0:
                 value = img[nx, ny]
                 neighbors = np.append(neighbors,[[value, nx, ny]],axis=0)
     
@@ -209,26 +225,28 @@ while(1):
         break
 cv2.destroyAllWindows()
 
-gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-height, width = gray.shape
+gray_raw = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+height, width = gray_raw.shape
 
-gray[gray < 100] = 0
+#gray[gray < 100] = 0
 
 #gray[gray > 200] = 0
 
-gray = sort(gray)
+gray = sort(gray_raw)
 
 arr = flood(gray)
 
 #arr[arr < 10000] = 0
 
-#arr = combine_adjacent(arr, 50000)
+colors = get_color_array(arr)
+
+arr = combine_adjacent(arr, gray_raw, colors, 100)
 
 
 
 
 
-arr = convert_to_color_image(arr)
+arr = color_image(arr,colors)
 
 
 
