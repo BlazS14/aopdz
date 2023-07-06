@@ -156,29 +156,58 @@ def flood(sortedgray):
     print(arr)
     return arr
 
-
+drawingred=False # true if mouse is pressed
+drawinggreen=False
 
 #function that shows an image and lets the user drwa a rectangle on it and returns the coordinates of the rectangle
-def get_rectangle_coordinates(image):
-    global height
-    global width
-    clone = image.copy()
-    r = cv2.selectROI("win1", clone, fromCenter=False, showCrosshair=True)
-    cv2.destroyAllWindows()
-    return r
+def interactive_drawing(event,x,y,flags,param):
+    global ix,iy,drawingred,drawinggreen
 
+    if event==cv2.EVENT_LBUTTONDOWN:
+        drawingred=True
+        ix,iy=x,y
 
+    elif event==cv2.EVENT_MOUSEMOVE:
+        if drawingred==True:
+            cv2.line(image,(ix,iy),(x,y),(0,0,255),10)
+            ix=x
+            iy=y
+        elif drawinggreen==True:
+            cv2.line(image,(ix,iy),(x,y),(0,255,0),10)
+            ix=x
+            iy=y
+    elif event==cv2.EVENT_LBUTTONUP:
+        drawingred=False
+        cv2.line(image,(ix,iy),(x,y),(0,0,255),10)
+        ix=x
+        iy=y
+    elif event==cv2.EVENT_RBUTTONDOWN:
+        drawinggreen=True
+        ix,iy=x,y
+    elif event==cv2.EVENT_RBUTTONUP:
+        drawinggreen=False
+        cv2.line(image,(ix,iy),(x,y),(0,255,0),10)
+        ix=x
+        iy=y
+    return x,y
 
 
 
 #get the image from file selection dialog
 image = cv2.imread(filedialog.askopenfilename())
 
-r = get_rectangle_coordinates(image)
-
 #image = cv2.imread("C:\\Users\\GTAbl\\Desktop\\AOPDZ-Vaja3\\untitled.jpg")
 
 image = cv2.resize(image, (960, 540))
+
+cv2.namedWindow('Selection')
+cv2.setMouseCallback('Selection',interactive_drawing)
+while(1):
+    cv2.imshow('Selection',image)
+    k=cv2.waitKey(1)&0xFF
+    if k==13:
+        break
+cv2.destroyAllWindows()
 
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 height, width = gray.shape
